@@ -12,8 +12,8 @@ export class DemoAuthenticationError extends Error {
 
 export function resolveDemoMode({ command, mode, enabled }) {
   return (
-    command === "serve" &&
-    mode === "development" &&
+    (command === "serve" || command === "build") &&
+    (mode === "development" || mode === "production") &&
     enabled === "true"
   );
 }

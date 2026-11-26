@@ -135,7 +135,7 @@ export default function DemoDashboard() {
       <Notice>{error || basesQuery.error}</Notice>
       <Notice tone="success">{success}</Notice>
       <div className="mb-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
-        <strong>DEMO MODE:</strong> fictional records only; changes stay in this browser session and are not sent to a backend.
+        <strong></strong> fictional records only; changes stay in this browser session and are not sent to a backend.
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">

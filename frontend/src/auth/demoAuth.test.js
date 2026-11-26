@@ -12,7 +12,7 @@ import {
 
 const testPassword = "synthetic-only-test-password";
 
-test("demo mode is enabled only by explicit local Vite development configuration", () => {
+test("demo mode requires explicit opt-in and supports production builds", () => {
   assert.equal(
     resolveDemoMode({
       command: "serve",
@@ -27,13 +27,29 @@ test("demo mode is enabled only by explicit local Vite development configuration
       mode: "production",
       enabled: "true",
     }),
-    false,
+    true,
   );
   assert.equal(
     resolveDemoMode({
       command: "serve",
       mode: "development",
       enabled: "false",
+    }),
+    false,
+  );
+  assert.equal(
+    resolveDemoMode({
+      command: "build",
+      mode: "production",
+      enabled: "false",
+    }),
+    false,
+  );
+  assert.equal(
+    resolveDemoMode({
+      command: "build",
+      mode: "test",
+      enabled: "true",
     }),
     false,
   );

@@ -92,8 +92,8 @@ export default function Sidebar({
       </nav>
       {demoMode && (
         <div className="absolute inset-x-0 bottom-0 border-t border-white/10 px-5 py-4">
-          <p className="text-xs font-semibold text-amber-300"></p>
-          <p className="mt-1 text-xs text-slate-400"></p>
+          {/* <p className="text-xs font-semibold text-amber-300">DEMO MODE</p> */}
+          {/* <p className="mt-1 text-xs text-slate-400">Synthetic data only</p> */}
         </div>
       )}
     </aside>

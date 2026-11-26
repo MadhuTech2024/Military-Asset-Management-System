@@ -457,10 +457,12 @@ production database for these tests.
 ## Local Frontend-Only Demo Mode
 
 For a UI preview without PostgreSQL or the backend, set
-`VITE_ENABLE_DEMO_MODE=true` and a temporary `VITE_DEMO_PASSWORD` in the
-ignored `frontend/.env.local` file. The local Vite development server binds to
-`127.0.0.1`; production builds force demo mode off and omit the demo password.
-Restart Vite after changing these values.
+`VITE_ENABLE_DEMO_MODE=true` and `VITE_DEMO_PASSWORD` in the ignored
+`frontend/.env.local` file. For a Vercel demo deployment, configure those same
+variables in the Vercel project's **Production** environment and trigger a new
+build. The production build enables demo mode only when the explicit flag is
+`true` and fails if its password is missing. The local Vite server binds to
+`127.0.0.1`.
 
 This mode uses an in-memory browser session and a local API adapter. It does
 not create backend accounts or tokens, contact the backend, or connect to a
@@ -470,8 +472,11 @@ changes stay in memory and can be reset by an administrator; refreshing the
 page resets the data and ends the session. Base-scoped roles see only their
 assigned base. Additional directory users created in demo mode cannot sign in.
 
-The configured password is delivered to the local development browser, so
-use only a throwaway demo value and never use this mode with real data.
+The configured password is embedded in the frontend bundle and is visible to
+anyone who can download it. It is not a secret or a security boundary. Use only
+a throwaway demo value and synthetic data; never use demo mode to protect real
+accounts or operational records. When the flag is `false`, the existing
+backend authentication and API adapter remain active.
 
 ## Local Demo Accounts
 

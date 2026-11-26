@@ -12,13 +12,18 @@ export default defineConfig(({ command, mode }) => {
     mode,
     enabled,
   });
+  if (demoModeEnabled && (!password || password.trim().length === 0)) {
+    throw new Error(
+      "VITE_ENABLE_DEMO_MODE is true but VITE_DEMO_PASSWORD is not configured.",
+    );
+  }
 
   return {
     plugins: [react()],
     define: {
       __KRISTALLBALL_DEMO_MODE__: JSON.stringify(demoModeEnabled),
       __KRISTALLBALL_DEMO_PASSWORD__: JSON.stringify(
-        demoModeEnabled && typeof password === "string" ? password : "",
+        demoModeEnabled ? password : "",
       ),
     },
     server: {
