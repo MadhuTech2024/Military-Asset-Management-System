@@ -1,0 +1,37 @@
+{
+  "name": "kristallball-backend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "typeorm": "typeorm",
+    "test": "node --test config/*.test.js",
+    "test:postgres": "node config/run-postgres-integration-tests.js --postgres-only",
+    "test:release": "node config/run-postgres-integration-tests.js --all",
+    "test:audit": "node --test config/auditSanitizer.test.js",
+    "test:database-config": "node --test config/databaseConnections.test.js",
+    "migration:run": "node config/run-migrations.js",
+    "migration:revert": "node config/revert-migration.js",
+    "seed": "node config/seed.js",
+    "seed:demo": "node config/runDemoSeed.js",
+    "apply-app-role": "node config/apply-app-role.js"
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^5.1.0",
+    "express-rate-limit": "^7.5.0",
+    "helmet": "^8.1.0",
+    "jose": "^6.2.18",
+    "pg": "^8.16.3",
+    "reflect-metadata": "^0.2.2",
+    "typeorm": "^0.3.27"
+  },
+  "overrides": {
+    "glob": "^14.0.6",
+    "minimatch": "^11.0.9"
+  }
+}
