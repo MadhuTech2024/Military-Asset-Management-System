@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useAuth } from "../context/AuthContext.jsx";
 import useApiQuery from "../hooks/useApiQuery.js";
 import api, { apiErrorMessage } from "../services/api.js";
 import {
@@ -23,6 +24,7 @@ const emptyUser = {
 };
 
 export default function Users() {
+  const { isDemoSession } = useAuth();
   const [offset, setOffset] = useState(0);
   const [editing, setEditing] = useState(null);
   const [values, setValues] = useState(emptyUser);
@@ -77,14 +79,21 @@ export default function Users() {
       role: values.role,
       baseId: values.role === "ADMIN" ? null : values.baseId || null,
     };
-    if (values.password) body.password = values.password;
+    if (values.password && !isDemoSession) body.password = values.password;
     try {
       if (editing) {
         await api.patch(`/users/${editing.id}`, body);
         setSuccess("User details updated.");
       } else {
-        await api.post("/users", { ...body, password: values.password });
-        setSuccess("User account created.");
+        await api.post(
+          "/users",
+          isDemoSession ? body : { ...body, password: values.password },
+        );
+        setSuccess(
+          isDemoSession
+            ? "Synthetic directory record created. It cannot be used to sign in."
+            : "User account created.",
+        );
       }
       setFormOpen(false);
       setValues(emptyUser);
@@ -126,7 +135,11 @@ export default function Users() {
     <>
       <PageHeader
         title="User management"
-        description="Manage account identity, role, base assignment, and active access."
+        description={
+          isDemoSession
+            ? "Manage the synthetic demo accounts and directory records. Additional directory records cannot sign in."
+            : "Manage account identity, role, base assignment, and active access."
+        }
         actions={<Button onClick={() => openForm()}>Add user</Button>}
       />
       <Notice>{error || query.error || basesQuery.error}</Notice>
@@ -222,21 +235,23 @@ export default function Users() {
                 </select>
               </Field>
             )}
-            <Field
-              label={editing ? "New password (optional)" : "Temporary password"}
-              hint="At least 12 characters. Passwords are never displayed after creation."
-            >
-              <input
-                className={inputClass}
-                type="password"
-                autoComplete="new-password"
-                value={values.password}
-                onChange={(event) => setValues({ ...values, password: event.target.value })}
-                minLength={editing && !values.password ? undefined : 12}
-                maxLength={72}
-                required={!editing}
-              />
-            </Field>
+            {!isDemoSession && (
+              <Field
+                label={editing ? "New password (optional)" : "Temporary password"}
+                hint="At least 12 characters. Passwords are never displayed after creation."
+              >
+                <input
+                  className={inputClass}
+                  type="password"
+                  autoComplete="new-password"
+                  value={values.password}
+                  onChange={(event) => setValues({ ...values, password: event.target.value })}
+                  minLength={editing && !values.password ? undefined : 12}
+                  maxLength={72}
+                  required={!editing}
+                />
+              </Field>
+            )}
             <div className="md:col-span-2">
               <Button type="submit" disabled={pending || basesQuery.loading}>
                 {pending ? "Saving…" : editing ? "Save changes" : "Create user"}

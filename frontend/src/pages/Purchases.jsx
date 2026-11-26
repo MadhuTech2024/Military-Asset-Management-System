@@ -18,7 +18,7 @@ import {
 const PURCHASE_PAGE_SIZE = 50;
 
 export default function Purchases() {
-  const { user } = useAuth();
+  const { user, isDemoSession } = useAuth();
   const canCreate = user.role === "ADMIN" || user.role === "LOGISTICS_OFFICER";
   const [offset, setOffset] = useState(0);
   const [values, setValues] = useState({
@@ -30,6 +30,8 @@ export default function Purchases() {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [selected, setSelected] = useState(null);
+  const [pendingStatusId, setPendingStatusId] = useState("");
   const report = useApiQuery("/reports/purchases", {
     limit: PURCHASE_PAGE_SIZE,
     offset,
@@ -45,6 +47,8 @@ export default function Purchases() {
   const typeById = new Map(
     equipmentTypes.map((equipmentType) => [equipmentType.id, equipmentType]),
   );
+  const canManageDemoStatus =
+    isDemoSession && (user.role === "ADMIN" || user.role === "LOGISTICS_OFFICER");
 
   async function submit(event) {
     event.preventDefault();
@@ -72,15 +76,65 @@ export default function Purchases() {
     }
   }
 
+  async function changeDemoStatus(purchase, status) {
+    setPendingStatusId(purchase.id);
+    setError("");
+    setSuccess("");
+    try {
+      await api.post(`/demo/purchases/${purchase.id}/status`, { status });
+      setSuccess(`Synthetic purchase ${status.toLowerCase()}.`);
+      setSelected(null);
+      report.refresh();
+    } catch (requestError) {
+      setError(apiErrorMessage(requestError));
+    } finally {
+      setPendingStatusId("");
+    }
+  }
+
   const purchases = report.data?.purchases ?? [];
   return (
     <>
       <PageHeader
         title="Purchases"
-        description="Review purchase requests and submit new pending requests. Completion is not available in this API."
+        description={
+          isDemoSession
+            ? "Review synthetic purchase requests. Demo-only status changes update the local inventory ledger."
+            : "Review purchase requests and submit new pending requests. Completion is not available in this API."
+        }
       />
       <Notice>{error || report.error || basesQuery.error || equipmentQuery.error}</Notice>
       <Notice tone="success">{success}</Notice>
+      {selected && (
+        <Panel
+          title="Purchase details"
+          className="mb-5"
+          actions={
+            <Button variant="secondary" onClick={() => setSelected(null)}>
+              Close
+            </Button>
+          }
+        >
+          <dl className="grid gap-4 text-sm sm:grid-cols-2 xl:grid-cols-4">
+            {[
+              ["Reference", selected.referenceCode ?? "—"],
+              ["Supplier", selected.supplier ?? "—"],
+              ["Estimated cost", selected.estimatedCost ? `$${Number(selected.estimatedCost).toLocaleString()}` : "—"],
+              ["Expected date", formatDate(selected.expectedAt)],
+              ["Status", selected.status],
+              ["Quantity", selected.quantity],
+              ["Requested", formatDate(selected.purchasedAt)],
+              ["Completed", formatDate(selected.completedAt)],
+            ].map(([label, value]) => (
+              <div key={label}>
+                <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</dt>
+                <dd className="mt-1 break-words font-medium text-slate-900">{value}</dd>
+              </div>
+            ))}
+          </dl>
+          {selected.notes && <p className="mt-4 text-sm text-slate-600">{selected.notes}</p>}
+        </Panel>
+      )}
       {canCreate && (
         <Panel title="Create purchase request" className="mb-5">
           <form onSubmit={submit} className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -189,6 +243,17 @@ export default function Purchases() {
                     purchase.equipmentTypeId,
                 },
                 { key: "quantity", label: "Quantity" },
+                ...(isDemoSession
+                  ? [
+                      { key: "referenceCode", label: "Reference" },
+                      { key: "supplier", label: "Supplier" },
+                      {
+                        key: "estimatedCost",
+                        label: "Estimate",
+                        render: (purchase) => `$${Number(purchase.estimatedCost ?? 0).toLocaleString()}`,
+                      },
+                    ]
+                  : []),
                 {
                   key: "status",
                   label: "Status",
@@ -203,6 +268,35 @@ export default function Purchases() {
                   key: "completedAt",
                   label: "Completed at",
                   render: (purchase) => formatDate(purchase.completedAt),
+                },
+                {
+                  key: "actions",
+                  label: "Actions",
+                  render: (purchase) => (
+                    <div className="flex flex-wrap gap-2">
+                      <Button variant="secondary" onClick={() => setSelected(purchase)}>
+                        Details
+                      </Button>
+                      {canManageDemoStatus &&
+                        ["PENDING", "APPROVED"].includes(purchase.status) && (
+                          <>
+                            <Button
+                              disabled={pendingStatusId === purchase.id}
+                              onClick={() => changeDemoStatus(purchase, "COMPLETED")}
+                            >
+                              Complete
+                            </Button>
+                            <Button
+                              variant="danger"
+                              disabled={pendingStatusId === purchase.id}
+                              onClick={() => changeDemoStatus(purchase, "REJECTED")}
+                            >
+                              Reject
+                            </Button>
+                          </>
+                        )}
+                    </div>
+                  ),
                 },
               ]}
               rows={purchases}

@@ -2,10 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import { Outlet } from "react-router-dom";
 import Navbar from "./Navbar.jsx";
 import Sidebar from "./Sidebar.jsx";
+import DemoToast from "./DemoToast.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 
 export default function AppLayout() {
-  const { user } = useAuth();
+  const { user, isDemoSession } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const menuButtonRef = useRef(null);
   const firstLinkRef = useRef(null);
@@ -40,11 +41,13 @@ export default function AppLayout() {
       )}
       <Sidebar
         user={user}
+        demoMode={isDemoSession}
         mobileOpen={mobileOpen}
         firstLinkRef={firstLinkRef}
         onNavigate={() => setMobileOpen(false)}
       />
       <div className="min-w-0 flex-1">
+        {isDemoSession && <DemoToast />}
         <Navbar
           mobileOpen={mobileOpen}
           menuButtonRef={menuButtonRef}

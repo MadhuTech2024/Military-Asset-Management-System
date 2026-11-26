@@ -454,6 +454,25 @@ loopback-only PostgreSQL test cluster. It creates and drops its own isolated
 test database. Never use an application, hosted, shared, staging, or
 production database for these tests.
 
+## Local Frontend-Only Demo Mode
+
+For a UI preview without PostgreSQL or the backend, set
+`VITE_ENABLE_DEMO_MODE=true` and a temporary `VITE_DEMO_PASSWORD` in the
+ignored `frontend/.env.local` file. The local Vite development server binds to
+`127.0.0.1`; production builds force demo mode off and omit the demo password.
+Restart Vite after changing these values.
+
+This mode uses an in-memory browser session and a local API adapter. It does
+not create backend accounts or tokens, contact the backend, or connect to a
+database. The adapter serves clearly synthetic data for five bases, twelve
+equipment types, inventory, transactions, personnel, and audit events. Demo
+changes stay in memory and can be reset by an administrator; refreshing the
+page resets the data and ends the session. Base-scoped roles see only their
+assigned base. Additional directory users created in demo mode cannot sign in.
+
+The configured password is delivered to the local development browser, so
+use only a throwaway demo value and never use this mode with real data.
+
 ## Local Demo Accounts
 
 The local demo seed creates these synthetic accounts when their normalized

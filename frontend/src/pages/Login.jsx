@@ -2,11 +2,12 @@ import { useState } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { Shield } from "lucide-react";
 import { useAuth } from "../context/AuthContext.jsx";
+import { DemoAuthenticationError } from "../auth/demoAuth.js";
 import { apiErrorMessage } from "../services/api.js";
 import { Button, Field, inputClass, Notice } from "../components/ui.jsx";
 
 export default function Login() {
-  const { isAuthenticated, login } = useAuth();
+  const { isAuthenticated, login, demoModeEnabled } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
@@ -24,7 +25,11 @@ export default function Login() {
       await login({ email, password });
       navigate(location.state?.from?.pathname ?? "/dashboard", { replace: true });
     } catch (requestError) {
-      setError(apiErrorMessage(requestError));
+      setError(
+        requestError instanceof DemoAuthenticationError
+          ? requestError.message
+          : apiErrorMessage(requestError),
+      );
     } finally {
       setPending(false);
     }
@@ -45,6 +50,11 @@ export default function Login() {
           </div>
         </div>
         <h1 className="text-2xl font-bold text-slate-950">Sign in</h1>
+        {demoModeEnabled && (
+          <span className="mt-2 inline-flex rounded-full bg-amber-100 px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-amber-900">
+            {/* Demo mode */}
+          </span>
+        )}
         <p className="mt-2 text-sm text-slate-600">
           Sign in with your authorized account to continue.
         </p>

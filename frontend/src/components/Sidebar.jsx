@@ -9,6 +9,7 @@ import {
   PackageCheck,
   Shield,
   Users,
+  UserRound,
   WalletCards,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
@@ -17,6 +18,7 @@ const navigation = [
   { to: "/dashboard", label: "Dashboard", icon: Gauge },
   { to: "/bases", label: "Bases", icon: MapPinned },
   { to: "/users", label: "User management", icon: Users, roles: ["ADMIN"] },
+  { to: "/personnel", label: "Personnel", icon: UserRound, demoOnly: true },
   { to: "/equipment-types", label: "Equipment types", icon: Layers3 },
   { to: "/inventory", label: "Inventory", icon: Archive },
   { to: "/purchases", label: "Purchases", icon: PackageCheck },
@@ -37,12 +39,15 @@ const navigation = [
 
 export default function Sidebar({
   user,
+  demoMode = false,
   mobileOpen = false,
   firstLinkRef,
   onNavigate,
 }) {
   const links = navigation.filter(
-    (item) => !item.roles || item.roles.includes(user?.role),
+    (item) =>
+      (!item.roles || item.roles.includes(user?.role)) &&
+      (!item.demoOnly || demoMode),
   );
   return (
     <aside
@@ -85,10 +90,12 @@ export default function Sidebar({
           </NavLink>
         ))}
       </nav>
-      <div className="absolute inset-x-0 bottom-0 border-t border-white/10 px-5 py-4">
-        <p className="text-xs font-semibold text-slate-300">DEMONSTRATION MODE</p>
-        <p className="mt-1 text-xs text-slate-500">Synthetic data only</p>
-      </div>
+      {demoMode && (
+        <div className="absolute inset-x-0 bottom-0 border-t border-white/10 px-5 py-4">
+          <p className="text-xs font-semibold text-amber-300"></p>
+          <p className="mt-1 text-xs text-slate-400"></p>
+        </div>
+      )}
     </aside>
   );
 }

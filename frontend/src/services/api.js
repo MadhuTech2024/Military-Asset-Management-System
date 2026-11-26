@@ -1,6 +1,45 @@
-import axios from "axios";
+import axios, { AxiosError, AxiosHeaders } from "axios";
+import {
+  DemoServiceError,
+  handleDemoRequest,
+} from "../demo/demoService.js";
 
 let accessToken = null;
+const demoModeEnabled = __KRISTALLBALL_DEMO_MODE__ === true;
+const networkAdapter = axios.getAdapter(axios.defaults.adapter);
+
+async function localDemoAdapter(config) {
+  try {
+    const result = await handleDemoRequest(config);
+    return {
+      ...result,
+      statusText: "OK",
+      headers: new AxiosHeaders(),
+      config,
+      request: null,
+    };
+  } catch (error) {
+    if (!(error instanceof DemoServiceError)) throw error;
+    const response = {
+      data: {
+        success: false,
+        error: { message: error.message },
+      },
+      status: error.status,
+      statusText: error.status === 401 ? "Unauthorized" : "Demo request failed",
+      headers: new AxiosHeaders(),
+      config,
+      request: null,
+    };
+    throw new AxiosError(
+      error.message,
+      AxiosError.ERR_BAD_REQUEST,
+      config,
+      null,
+      response,
+    );
+  }
+}
 
 export function setAccessToken(token) {
   accessToken = typeof token === "string" && token.length > 0 ? token : null;
@@ -9,6 +48,7 @@ export function setAccessToken(token) {
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
   timeout: 15000,
+  adapter: demoModeEnabled ? localDemoAdapter : networkAdapter,
   headers: {
     "Content-Type": "application/json",
   },

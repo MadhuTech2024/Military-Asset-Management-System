@@ -2,7 +2,7 @@ import { Menu, ShieldCheck, X } from "lucide-react";
 import { useAuth } from "../context/AuthContext.jsx";
 
 export default function Navbar({ mobileOpen, menuButtonRef, onMenuClick }) {
-  const { user, logout } = useAuth();
+  const { user, logout, isDemoSession } = useAuth();
   return (
     <header className="flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 sm:px-7">
       <div className="flex items-center gap-3">
@@ -27,6 +27,11 @@ export default function Navbar({ mobileOpen, menuButtonRef, onMenuClick }) {
         </div>
       </div>
       <div className="flex items-center gap-3">
+        {isDemoSession && (
+          <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-amber-900">
+            {/* Demo mode */}
+          </span>
+        )}
         <div className="hidden text-right sm:block">
           <p className="text-sm font-semibold text-slate-900">{user?.name}</p>
           <p className="text-xs text-slate-500">{user?.role?.replaceAll("_", " ")}</p>

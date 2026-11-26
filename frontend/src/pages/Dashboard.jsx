@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Activity, Archive, ArrowDownToLine, PackageCheck, Wallet } from "lucide-react";
 import { useAuth } from "../context/AuthContext.jsx";
+import DemoDashboard from "./DemoDashboard.jsx";
 import useApiQuery from "../hooks/useApiQuery.js";
 import StatCard from "../components/StatCard.jsx";
 import {
@@ -14,7 +15,12 @@ import {
 } from "../components/ui.jsx";
 
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { user, isDemoSession } = useAuth();
+  if (isDemoSession) return <DemoDashboard />;
+  return <OperationalDashboard user={user} />;
+}
+
+function OperationalDashboard({ user }) {
   const [baseId, setBaseId] = useState("");
   const isAdmin = user.role === "ADMIN";
   const basesQuery = useApiQuery("/bases", { limit: 100, isActive: true });

@@ -30,6 +30,7 @@ export default function Transfers() {
   const [pendingId, setPendingId] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [selected, setSelected] = useState(null);
   const [offset, setOffset] = useState(0);
   const [destinationOffset, setDestinationOffset] = useState(0);
   const [loadedDestinations, setLoadedDestinations] = useState([]);
@@ -135,36 +136,32 @@ export default function Transfers() {
       label: "Available action",
       render: (transfer) => {
         const isDestination = transfer.destinationBaseId === user.baseId;
+        const controls = [];
         if (user.role === "BASE_COMMANDER" && isDestination && transfer.status === "PENDING") {
-          return (
-            <div className="flex gap-2">
-              <Button
-                disabled={pendingId === transfer.id}
-                onClick={() => act(transfer, "approve")}
-              >
-                Approve
-              </Button>
-              <Button
-                variant="danger"
-                disabled={pendingId === transfer.id}
-                onClick={() => act(transfer, "reject")}
-              >
-                Reject
-              </Button>
-            </div>
+          controls.push(
+            <Button key="approve" disabled={pendingId === transfer.id} onClick={() => act(transfer, "approve")}>
+              Approve
+            </Button>,
+            <Button key="reject" variant="danger" disabled={pendingId === transfer.id} onClick={() => act(transfer, "reject")}>
+              Reject
+            </Button>,
           );
         }
         if (user.role === "LOGISTICS_OFFICER" && isDestination && transfer.status === "APPROVED") {
-          return (
-            <Button
-              disabled={pendingId === transfer.id}
-              onClick={() => act(transfer, "complete")}
-            >
+          controls.push(
+            <Button key="complete" disabled={pendingId === transfer.id} onClick={() => act(transfer, "complete")}>
               Complete
-            </Button>
+            </Button>,
           );
         }
-        return "—";
+        return (
+          <div className="flex flex-wrap gap-2">
+            <Button variant="secondary" onClick={() => setSelected(transfer)}>
+              Details
+            </Button>
+            {controls}
+          </div>
+        );
       },
     },
   ];
@@ -177,6 +174,38 @@ export default function Transfers() {
       />
       <Notice>{error || report.error || basesQuery.error || destinationsQuery.error || equipmentQuery.error}</Notice>
       <Notice tone="success">{success}</Notice>
+      {selected && (
+        <Panel
+          title="Transfer details"
+          className="mb-5"
+          actions={
+            <Button variant="secondary" onClick={() => setSelected(null)}>
+              Close
+            </Button>
+          }
+        >
+          <dl className="grid gap-4 text-sm sm:grid-cols-2 xl:grid-cols-4">
+            {[
+              ["Transfer ID", selected.id],
+              ["Source base", baseName(selected.sourceBaseId)],
+              ["Destination base", baseName(selected.destinationBaseId)],
+              ["Equipment", typeName(selected.equipmentTypeId)],
+              ["Quantity", selected.quantity],
+              ["Status", selected.status],
+              ["Requested", formatDate(selected.createdAt)],
+              ["Approved", formatDate(selected.approvedAt)],
+              ["Completed", formatDate(selected.completedAt)],
+              ["Rejected", formatDate(selected.rejectedAt)],
+            ].map(([label, value]) => (
+              <div key={label}>
+                <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</dt>
+                <dd className="mt-1 break-all font-medium text-slate-900">{value ?? "—"}</dd>
+              </div>
+            ))}
+          </dl>
+          {selected.notes && <p className="mt-4 text-sm text-slate-600">{selected.notes}</p>}
+        </Panel>
+      )}
       {canInitiate && (
         <Panel title="Initiate transfer" className="mb-5">
           <form onSubmit={submit} className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
